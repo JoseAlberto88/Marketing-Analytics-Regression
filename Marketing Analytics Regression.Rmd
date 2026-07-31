@@ -72,9 +72,65 @@ class imbalance. These visual patterns will directly inform how we justify
 our choice of dependent variable and regression type in the next step,
 rather than relying on assumptions from theory alone.
 
+**Step 1a: Data Types Check**
+
+```{r dtypes check}
+dtypes <- sapply(df, function(x) class(x)[1])
+table(dtypes)
+```
+**Step 1b: Missing Values**
+
+```{r missing values}
+colSums(is.na(df))
+```
+**Step 1c: Duplicates**
+
+```{r duplicates}
+cat("Duplicate rows:", sum(duplicated(df)), "\n")
+```
+**Step 1d: Split Continuous versus Categorical**
+
+```{r variable-types}
+id_vars <- c("CustomerID")
+categorical_vars <- c("Gender", "Region", "PromoUsed", "Churn")
+continuous_vars <- setdiff(names(df), c(id_vars, categorical_vars))
+
+cat("ID variable (excluded from analysis):", paste(id_vars, collapse = ", "), "\n")
+cat("Categorical variables:", paste(categorical_vars, collapse = ", "), "\n")
+cat("Continuous variables:", paste(continuous_vars, collapse = ", "), "\n")
+```
+
+**Step 1e: Histograms for continuous variables**
 
 
+```{r histograms-plain, fig.width=11, fig.height=8}
+df_long <- df %>% select(all_of(continuous_vars)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value")
 
+ggplot(df_long, aes(x = Value, fill = Variable)) +
+  geom_histogram(bins = 30, color = "white", alpha = 0.9) +
+  facet_wrap(~Variable, scales = "free") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Distribution of Continuous Variables (No Density Curve)",
+       x = NULL, y = "Count")
+```
+**Step 1f: Bar Charts for all Categorical variables**
+
+```{r barcharts, fig.width=9, fig.height=6}
+df_long_cat <- df %>% select(all_of(categorical_vars)) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value")
+
+ggplot(df_long_cat, aes(x = Value, fill = Value)) +
+  geom_bar(color = "white", alpha = 0.9) +
+  facet_wrap(~Variable, scales = "free_x") +
+  scale_fill_brewer(palette = "Pastel1") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Distribution of Categorical Variables", x = NULL, y = "Count")
+```
 # Step 2: Model Development
 
 *(To fill in together \u2014 Model 1 baseline, Model 2 multiple regression,

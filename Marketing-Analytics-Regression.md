@@ -88,7 +88,99 @@ spread, and class imbalance. These visual patterns will directly inform
 how we justify our choice of dependent variable and regression type in
 the next step, rather than relying on assumptions from theory alone.
 
-# Step 2: Model Development
+**Step 1a: Data Types Check**
+
+``` r
+dtypes <- sapply(df, function(x) class(x)[1])
+table(dtypes)
+```
+
+    ## dtypes
+    ## character   numeric 
+    ##         2        13
+
+**Step 1b: Missing Values**
+
+``` r
+colSums(is.na(df))
+```
+
+    ##        CustomerID               Age            Gender            Income 
+    ##                 0                 0                 0                 0 
+    ##            Region     WebsiteVisits        TimeOnSite       PagesViewed 
+    ##                 0                 0                 0                 0 
+    ##     AdImpressions            Clicks        EmailOpens         PromoUsed 
+    ##                 0                 0                 0                 0 
+    ## SatisfactionScore    PurchaseAmount             Churn 
+    ##                 0                 0                 0
+
+**Step 1c: Duplicates**
+
+``` r
+cat("Duplicate rows:", sum(duplicated(df)), "\n")
+```
+
+    ## Duplicate rows: 0
+
+**Step 1d: Split Continuous versus Categorical**
+
+``` r
+id_vars <- c("CustomerID")
+categorical_vars <- c("Gender", "Region", "PromoUsed", "Churn")
+continuous_vars <- setdiff(names(df), c(id_vars, categorical_vars))
+
+cat("ID variable (excluded from analysis):", paste(id_vars, collapse = ", "), "\n")
+```
+
+    ## ID variable (excluded from analysis): CustomerID
+
+``` r
+cat("Categorical variables:", paste(categorical_vars, collapse = ", "), "\n")
+```
+
+    ## Categorical variables: Gender, Region, PromoUsed, Churn
+
+``` r
+cat("Continuous variables:", paste(continuous_vars, collapse = ", "), "\n")
+```
+
+    ## Continuous variables: Age, Income, WebsiteVisits, TimeOnSite, PagesViewed, AdImpressions, Clicks, EmailOpens, SatisfactionScore, PurchaseAmount
+
+**Step 1e: Histograms for continuous variables**
+
+``` r
+df_long <- df %>% select(all_of(continuous_vars)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value")
+
+ggplot(df_long, aes(x = Value, fill = Variable)) +
+  geom_histogram(bins = 30, color = "white", alpha = 0.9) +
+  facet_wrap(~Variable, scales = "free") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Distribution of Continuous Variables (No Density Curve)",
+       x = NULL, y = "Count")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/histograms-plain-1.png)<!-- -->
+**Step 1f: Bar Charts for all Categorical variables**
+
+``` r
+df_long_cat <- df %>% select(all_of(categorical_vars)) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value")
+
+ggplot(df_long_cat, aes(x = Value, fill = Value)) +
+  geom_bar(color = "white", alpha = 0.9) +
+  facet_wrap(~Variable, scales = "free_x") +
+  scale_fill_brewer(palette = "Pastel1") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Distribution of Categorical Variables", x = NULL, y = "Count")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/barcharts-1.png)<!-- -->
+\# Step 2: Model Development
 
 *(To fill in together 014 Model 1 baseline, Model 2 multiple regression,
 Model 3 improved/alternative form.)*
