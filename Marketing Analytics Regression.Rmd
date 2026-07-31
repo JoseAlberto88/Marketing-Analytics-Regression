@@ -113,10 +113,11 @@ ggplot(df_long, aes(x = Value, fill = Variable)) +
   scale_fill_brewer(palette = "Set3") +
   theme_minimal() +
   theme(legend.position = "none") +
-  labs(title = "Distribution of Continuous Variables (No Density Curve)",
+  labs(title = "Distribution of Continuous Variables",
        x = NULL, y = "Count")
 ```
 **Step 1f: Bar Charts for all Categorical variables**
+
 
 ```{r barcharts, fig.width=9, fig.height=6}
 df_long_cat <- df %>% select(all_of(categorical_vars)) %>%
@@ -131,6 +132,8 @@ ggplot(df_long_cat, aes(x = Value, fill = Value)) +
   theme(legend.position = "none") +
   labs(title = "Distribution of Categorical Variables", x = NULL, y = "Count")
 ```
+
+
 # Step 2: Model Development
 
 *(To fill in together \u2014 Model 1 baseline, Model 2 multiple regression,
