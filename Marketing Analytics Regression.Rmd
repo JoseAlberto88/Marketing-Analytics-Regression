@@ -46,9 +46,34 @@ str(df)
 
 # Step 1: Exploratory Analysis
 
-*(To fill in together \u2014 choosing the dependent variable, at least four
-independent variables, correlation matrix, and distribution/relationship
-plots.)*
+Before selecting a dependent variable and building any regression models, we
+first need to understand the dataset itself. This section performs a basic
+diagnostic pass over `marketing_analytics_dataset_5000.xlsx` to answer four
+questions:
+
+- **Are the data types consistent?** Numeric-looking columns should actually
+  be read as numeric, not accidentally stored as text, and vice versa for
+  categorical variables.
+- **Are there missing values?** If so, how many, and in which columns?
+- **Are there duplicate rows?** Repeated customer records would bias any
+  model built on top of them.
+- **Which variables are continuous, and which are categorical?** This
+  distinction matters immediately: continuous variables are candidates for
+  direct numeric predictors in a regression model, while categorical
+  variables (like `Region` or `Gender`) will need to be encoded before they
+  can be used, and binary flags like `PromoUsed` and `Churn` behave more
+  like categories than true continuous measurements even though they're
+  stored as 0/1 numbers.
+
+Once we understand the shape and quality of the data, we'll visualize the
+distribution of every variable, histograms for continuous variables and bar
+charts for categorical ones, to get a first look at skewness, spread, and
+class imbalance. These visual patterns will directly inform how we justify
+our choice of dependent variable and regression type in the next step,
+rather than relying on assumptions from theory alone.
+
+
+
 
 # Step 2: Model Development
 
