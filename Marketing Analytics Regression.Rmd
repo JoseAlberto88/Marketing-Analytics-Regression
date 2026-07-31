@@ -1,12 +1,9 @@
 ---
 title: "Marketing Analytics Regression"
-subtitle: "Regression Modeling of Customer Behavior"
 author: "Jose Alberto Martinez Morales"
 date: "2026-07-31"
-output:
-  html_document:
-    toc: true
-    toc_float: true
+output: github_document
+subtitle: Regression Modeling of Customer Behavior
 ---
 
 **Marketing Analytics (DAMO-520-21)**
