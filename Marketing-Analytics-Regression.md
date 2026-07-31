@@ -158,7 +158,7 @@ ggplot(df_long, aes(x = Value, fill = Variable)) +
   scale_fill_brewer(palette = "Set3") +
   theme_minimal() +
   theme(legend.position = "none") +
-  labs(title = "Distribution of Continuous Variables (No Density Curve)",
+  labs(title = "Distribution of Continuous Variables",
        x = NULL, y = "Count")
 ```
 
@@ -180,7 +180,8 @@ ggplot(df_long_cat, aes(x = Value, fill = Value)) +
 ```
 
 ![](Marketing-Analytics-Regression_files/figure-gfm/barcharts-1.png)<!-- -->
-\# Step 2: Model Development
+
+# Step 2: Model Development
 
 *(To fill in together 014 Model 1 baseline, Model 2 multiple regression,
 Model 3 improved/alternative form.)*
