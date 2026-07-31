@@ -1,29 +1,64 @@
 ---
 title: "Marketing Analytics Regression"
-output: html_document
+subtitle: "Regression Modeling of Customer Behavior"
+author: "Jose Alberto Martinez Morales"
 date: "2026-07-31"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
+**Marketing Analytics (DAMO-520-21)**
+
+**Instructor:** Prof. Mohamad Makki
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-## R Markdown
+# Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This notebook applies regression modeling to `marketing_analytics_dataset_5000.csv`
+to analyze customer behavior, following the assignment structure:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+- **Part A**: Exploratory analysis and three regression models (baseline,
+  multiple regression, improved/alternative form)
+- **Part B**: Diagnostic testing (linearity, normality, homoscedasticity,
+  multicollinearity, influential observations)
+- **Part C**: Business implications and limitations (written up separately
+  in the final report)
 
-```{r cars}
-summary(cars)
+We'll build this up step by step, one chunk at a time.
+
+# Step 0: Load Packages and Data
+
+```{r load-packages}
+library(tidyverse)   # dplyr, ggplot2, etc.
+library(car)         # VIF, component+residual plots
+library(lmtest)      # Breusch-Pagan test
+library(GGally)      # correlation matrix / pairs plots
+library(readxl)      # for reading .xlsx files
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r load-data}
+df <- read_excel("C:/Users/piuze/OneDrive/Documentos/marketing-analytics-regression/data/marketing_analytics_dataset_5000.xlsx")
+dim(df)
+str(df)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Step 1: Exploratory Analysis
+
+*(To fill in together \u2014 choosing the dependent variable, at least four
+independent variables, correlation matrix, and distribution/relationship
+plots.)*
+
+# Step 2: Model Development
+
+*(To fill in together \u2014 Model 1 baseline, Model 2 multiple regression,
+Model 3 improved/alternative form.)*
+
+# Part B: Diagnostic Testing
+
+*(To fill in together \u2014 linearity, normality, homoscedasticity,
+multicollinearity, influential observations.)*
