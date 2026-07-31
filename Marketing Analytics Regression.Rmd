@@ -133,6 +133,37 @@ ggplot(df_long_cat, aes(x = Value, fill = Value)) +
   labs(title = "Distribution of Categorical Variables", x = NULL, y = "Count")
 ```
 
+## Key Insights from Exploratory Analysis
+
+- **Data quality is clean**: no missing values across all 15 columns, no
+  duplicate rows, and data types are internally consistent. Of the 4
+  categorical variables, only `Gender` and `Region` are stored as character
+  columns; `Churn` and `PromoUsed` are categorical in nature (binary
+  yes/no flags) but stored as numeric 0/1 values, so a dtypes check alone
+  doesn't fully capture the categorical/continuous split. It has to be
+  judged by what each variable actually represents.
+
+- **Right-skewed variables**: `Clicks`, `EmailOpens`, `WebsiteVisits`, and
+  `TimeOnSite` all show a classic right-skew shape, a peak near low
+  values with a long tail extending right. This is typical of count/engagement
+  data and suggests these variables are **not normally distributed**,
+  a pattern worth citing when justifying a non-linear or transformed model later.
+
+- **Roughly uniform (flat) variables**: `Age`, `AdImpressions`, and
+  `PagesViewed` show almost no concentration around a central value, every range is nearly equally likely, unlike a bell curve.
+
+- **Closer to normal**: `Income` and `PurchaseAmount` both show a visibly
+  bell-shaped, single-peaked distribution, the strongest candidates for
+  variables that behave well under standard linear regression assumptions.
+
+- **Class imbalance in `Churn`**: the majority of customers have `Churn = 0`,
+  with far fewer `Churn = 1` cases, important to flag if this variable is
+  ever used as a predictor or outcome.
+
+- **Balanced categories elsewhere**: `Gender`, `PromoUsed`, and `Region` are
+  all reasonably evenly distributed across their categories, so none of
+  these raise a class-imbalance concern.
+
 
 # Step 2: Model Development
 
