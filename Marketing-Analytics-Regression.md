@@ -294,6 +294,48 @@ likely to notice and use promos in the first place (reverse causation /
 selection effect), rather than the promo itself causing the higher
 spend.
 
+**Question2: Is more time on the website actually worth more money or is
+there a point of diminishing returns ?**
+
+``` r
+decile_summary <- df %>%
+  mutate(TimeOnSite_decile = ntile(TimeOnSite, 10)) %>%
+  group_by(TimeOnSite_decile) %>%
+  summarise(avg_time = mean(TimeOnSite), avg_purchase = mean(PurchaseAmount))
+
+ggplot(decile_summary, aes(x = TimeOnSite_decile, y = avg_purchase)) +
+  geom_line(color = "#4A9D5B", linewidth = 1.1) +
+  geom_point(size = 3, color = "#4A9D5B") +
+  geom_text(aes(label = paste0("$", round(avg_purchase, 0))), vjust = -1.2, size = 3.3) +
+  scale_x_continuous(breaks = 1:10) +
+  theme_minimal() +
+  labs(
+    title = "Is There a Point of Diminishing Returns on Time-on-Site?",
+    subtitle = "Average Purchase Amount by TimeOnSite Decile (1 = lowest engagement, 10 = highest)",
+    x = "TimeOnSite Decile", y = "Average Purchase Amount ($)"
+  )
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/q2-timeonsite-deciles-1.png)<!-- -->
+
+**Question 2: Insights**
+
+The relationship is essentially **flat**, average purchase amount barely
+moves across `TimeOnSite` deciles, staying in a narrow band between
+about \$88.6 and \$92 (roughly a **4% spread** from lowest to highest
+decile). That’s a meaningfully different pattern than the
+steadily-climbing curve we saw on the synthetic test data.
+
+This actually answers the business question directly, just not the way
+we expected: **there’s no “point of diminishing returns” to find,
+because there’s no real returns curve here to begin with.** Time spent
+on the site doesn’t appear to meaningfully predict how much a customer
+spends. The small bump at decile 6 (\$92) is most likely just sampling
+noise, each decile only contains about 1/10th of your customers, so a
+single group landing a few dollars higher than its neighbors isn’t
+strong evidence of a real effect, especially when deciles 5, 7, 8, and 9
+all sit right back around \$89.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
