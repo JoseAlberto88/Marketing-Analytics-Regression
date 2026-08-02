@@ -336,6 +336,68 @@ single group landing a few dollars higher than its neighbors isn’t
 strong evidence of a real effect, especially when deciles 5, 7, 8, and 9
 all sit right back around \$89.
 
+**Question 3: Which region converts marketing expose into revenue most
+efficiently ?**
+
+``` r
+region_summary <- df %>%
+  group_by(Region) %>%
+  summarise(
+    avg_purchase = mean(PurchaseAmount),
+    revenue_per_impression = mean(PurchaseAmount) / mean(AdImpressions)
+  ) %>%
+  mutate(Region = factor(Region, levels = Region[order(revenue_per_impression)]))
+
+p1 <- ggplot(region_summary, aes(x = Region, y = avg_purchase, fill = Region)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = paste0("$", round(avg_purchase, 0))), vjust = -0.5, size = 4) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() + theme(legend.position = "none") +
+  labs(title = "Raw Average Purchase Amount", x = NULL, y = "Purchase Amount ($)") +
+  ylim(0, max(region_summary$avg_purchase) * 1.2)
+
+p2 <- ggplot(region_summary, aes(x = Region, y = revenue_per_impression, fill = Region)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = paste0("$", round(revenue_per_impression, 3))), vjust = -0.5, size = 4) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() + theme(legend.position = "none") +
+  labs(title = "Revenue per Ad Impression", x = NULL, y = "Revenue / Impression ($)") +
+  ylim(0, max(region_summary$revenue_per_impression) * 1.3)
+
+p1 + p2 + plot_annotation(title = "Which Region Is Actually the Most Marketing-Efficient?")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/q3-region-efficiency-1.png)<!-- -->
+
+**Question 3: Insights**
+
+Here, both panels tell essentially the **same story**, just at different
+resolutions. Raw purchase amounts are nearly identical across all four
+regions (\$89–\$90), and revenue-per-impression is similarly tight
+(\$0.353–\$0.370), but there’s a consistent, if modest, ordering in both
+panels: **North is lowest**, **South is highest**, with East and West
+sitting in between.
+
+This is the “no hidden story” case we flagged as a possibility: the
+region generating the most raw revenue (South) is also the most
+marketing-efficient one, and the region with the lowest raw revenue
+(North) is also the least efficient. There’s no reordering between the
+two panels, meaning current regional ad allocation isn’t obviously
+*misallocated* relative to where conversion actually happens.
+
+**What this actually tells a marketing team**: the regional differences
+here are small in absolute terms (a spread of about \$0.02 per
+impression, roughly a 5% gap between North and South), not the dramatic
+story the “hidden efficiency” framing was hoping to surface. That’s a
+legitimate finding worth stating plainly rather than overselling:
+**region alone isn’t a strong lever for revenue optimization in this
+dataset**, since all four markets convert ad exposure at roughly
+comparable rates. If you want a stronger regional story, it might be
+worth checking whether the *variables driving* purchase amount (like
+`TimeOnSite` or `Income`) themselves vary meaningfully by region. That
+could explain why South edges out North even though ad efficiency alone
+doesn’t look dramatically different.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
