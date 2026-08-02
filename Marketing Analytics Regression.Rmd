@@ -36,6 +36,7 @@ library(car)         # VIF, component+residual plots
 library(lmtest)      # Breusch-Pagan test
 library(GGally)      # correlation matrix / pairs plots
 library(readxl)      # for reading .xlsx files
+library(patchwork) 
 ```
 
 ```{r load-data}
@@ -192,6 +193,41 @@ before moving to the next.
    satisfaction and spending decoupled?
 5. Is there a specific age × income combination quietly driving most
    of the revenue?
+
+
+**Question 1: Are promotions attracting genuine customers, or just bargain hunters who churn anyway ? **
+
+
+```{r q1-promo-churn, fig.width=10, fig.height=5.5}
+summary_promo <- df %>%
+  group_by(PromoUsed) %>%
+  summarise(avg_purchase = mean(PurchaseAmount), churn_rate = mean(Churn) * 100) %>%
+  mutate(PromoUsed = factor(PromoUsed, labels = c("No Promo", "Used Promo")))
+
+p1 <- ggplot(summary_promo, aes(x = PromoUsed, y = avg_purchase, fill = PromoUsed)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = paste0("$", round(avg_purchase, 1))), vjust = -0.5, size = 4) +
+  scale_fill_manual(values = c("#8FBFE0", "#F4A99B")) +
+  theme_minimal() + theme(legend.position = "none") +
+  labs(title = "Average Purchase Amount", x = NULL, y = "Purchase Amount ($)") +
+  ylim(0, max(summary_promo$avg_purchase) * 1.2)
+
+p2 <- ggplot(summary_promo, aes(x = PromoUsed, y = churn_rate, fill = PromoUsed)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = paste0(round(churn_rate, 1), "%")), vjust = -0.5, size = 4) +
+  scale_fill_manual(values = c("#8FBFE0", "#F4A99B")) +
+  theme_minimal() + theme(legend.position = "none") +
+  labs(title = "Churn Rate", x = NULL, y = "Churn Rate (%)") +
+  ylim(0, max(summary_promo$churn_rate) * 1.3)
+
+p1 + p2 + plot_annotation(title = "Do Promo Users Spend More, But Also Churn More?")
+```
+
+**Question 1: Insights**
+
+Promo users spend noticeably more on average ($99.10 vs. $80.40, a 23% lift), while their churn rate is actually slightly lower, not higher (24.2% vs. 24.6%). This directly answers the tension the question was built around: the data does not support the "bargain hunter" concern. If promotions were mainly attracting price-sensitive customers who churn right after redeeming a discount, we'd expect the churn bar to be taller for promo users, instead it's marginally shorter.
+
+This is a genuinely useful marketing finding: **promo usage looks like a clean win**, correlating with both higher spend and (if anything) slightly better retention, rather than trading short-term revenue for long-term churn risk. Worth flagging as a caveat in your write-up though. This is a **correlation, not a causal claim**: customers who were already going to spend more and stay longer might simply be more likely to notice and use promos in the first place (reverse causation / selection effect), rather than the promo itself causing the higher spend.
 
 
 # Part B: Diagnostic Testing
