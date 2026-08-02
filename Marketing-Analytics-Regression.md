@@ -453,6 +453,66 @@ behavioral signals (like `TimeOnSite`, `WebsiteVisits`, or `PromoUsed`,
 which *did* show real relationships with `PurchaseAmount`) rather than
 satisfaction scores.
 
+**Question 5 Is there a specific age x income combination quietly
+driving most of the revenue ?**
+
+``` r
+heat_data <- df %>%
+  mutate(
+    age_bracket = cut(Age, breaks = 6, dig.lab = 5),
+    income_bracket = cut(Income, breaks = 6, dig.lab = 6)
+  ) %>%
+  group_by(age_bracket, income_bracket) %>%
+  summarise(avg_purchase = mean(PurchaseAmount), n = n(), .groups = "drop")
+
+ggplot(heat_data, aes(x = age_bracket, y = income_bracket, fill = avg_purchase)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = paste0("$", round(avg_purchase, 0))), size = 3.2, color = "black") +
+  scale_fill_gradient(low = "#FDEBD0", high = "#B9481F", name = "Avg Purchase ($)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 40, hjust = 1)) +
+  labs(
+    title = "Is There a Hidden Age x Income Interaction Driving Revenue?",
+    subtitle = "Average Purchase Amount by Age Bracket x Income Bracket",
+    x = "Age Bracket", y = "Income Bracket"
+  )
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/q5-age-income-heatmap-1.png)<!-- -->
+
+**Question 5: Insights**
+
+This is a clean, clear pattern: **strong vertical gradient, flat
+horizontal gradient**. Moving up any single column (increasing income)
+takes you from ~\$68 to ~\$130+, a massive, consistent climb. Moving
+across any single row (changing age, holding income roughly constant)
+barely moves the number at all, most rows vary by only \$1–3 across all
+six age brackets.
+
+**This answers Question 5 directly, but not with a “yes” to the
+hidden-interaction hypothesis**: there’s no special age × income
+combination secretly driving revenue. Instead, the heatmap reveals
+something simpler and just as useful, **income is doing essentially all
+the work, and age is doing almost none**. This lines up with what we
+already suspected from Step 1’s insight that `Age` showed a flat,
+uniform distribution with near-zero correlation to `PurchaseAmount` on
+its own; this chart confirms that flatness holds true even *within*
+every income level, not just in aggregate.
+
+**One cell worth a second look, but with a caveat**: the top-right cell
+(\$137, for ages 55.3–64.7 in the highest income bracket) sits
+noticeably above its row-neighbors, which are otherwise tightly
+clustered around \$124. That could hint at a genuine “older,
+high-income” premium segment, but the top income bracket almost
+certainly has the smallest sample size of any cell in this grid (high
+earners are rarer), so a single elevated cell there could easily be
+noise rather than a real interaction.
+
+**Marketing implication**: since income is clearly the dominant driver
+and age contributes essentially nothing, segmentation and targeting
+strategies should prioritize income tier over age group, age-based
+marketing personas may not be adding much predictive value here.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
