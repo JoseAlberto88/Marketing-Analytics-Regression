@@ -215,10 +215,33 @@ ggplot(df_long_cat, aes(x = Value, fill = Value)) +
   are all reasonably evenly distributed across their categories, so none
   of these raise a class-imbalance concern.
 
-# Step 2: Model Development
+# Step 2: Business Questions
 
-*(To fill in together 014 Model 1 baseline, Model 2 multiple regression,
-Model 3 improved/alternative form.)*
+With the data validated and the basic distributions understood from Step
+1, this section moves from describing the data to actually *using* it to
+answer questions a marketing team would care about. Five questions were
+selected, each chosen because the straightforward average or correlation
+hides a more interesting story underneath, a hidden tension, a decoupled
+relationship, or an interaction effect that only shows up once you look
+at the right combination of variables.
+
+Each question is paired with one supporting visual and a short
+interpretation of what it reveals. We’ll build these one at a time,
+verifying each visualization actually surfaces the underlying pattern
+before moving to the next.
+
+**The five questions:**
+
+1.  Are promotions attracting genuine customers, or just bargain hunters
+    who churn anyway?
+2.  Is more time on the website actually worth more money, or is there a
+    point of diminishing returns?
+3.  Which region converts marketing exposure into revenue most
+    efficiently?
+4.  Are the happiest customers also the most valuable, or are
+    satisfaction and spending decoupled?
+5.  Is there a specific age × income combination quietly driving most of
+    the revenue?
 
 # Part B: Diagnostic Testing
 
