@@ -398,6 +398,61 @@ worth checking whether the *variables driving* purchase amount (like
 could explain why South edges out North even though ad efficiency alone
 doesn’t look dramatically different.
 
+**Question 4: Are the happiest customers also the most valuable or are
+satisfaction and spending decoupled ?**
+
+``` r
+ggplot(df, aes(x = SatisfactionScore, y = PurchaseAmount, color = factor(Churn))) +
+  geom_point(alpha = 0.4, size = 1.3) +
+  geom_smooth(method = "loess", se = FALSE, linewidth = 0.8) +
+  scale_color_manual(values = c("0" = "#5B8FB9", "1" = "#D9534F"),
+                      labels = c("Retained", "Churned"), name = "Customer Status") +
+  theme_minimal() +
+  labs(
+    title = "Are Happy Customers Also the Most Valuable — or Are They Decoupled?",
+    subtitle = "Purchase Amount vs. Satisfaction, colored by Churn status",
+    x = "Satisfaction Score", y = "Purchase Amount ($)"
+  )
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/q4-satisfaction-churn-1.png)<!-- -->
+
+**Question 4: Insights**
+
+This is a clear **“decoupled”** result, both the blue (retained) and red
+(churned) loess lines are essentially **flat across the entire
+satisfaction range**, hovering around \$85–\$90 regardless of whether
+satisfaction is 1 or 5. There’s no meaningful upward trend for either
+group, and the cloud of points is uniformly scattered with no visible
+funnel or shift as satisfaction increases.
+
+This directly answers the question: **satisfaction and spending are
+largely decoupled** in this dataset. A customer who rates their
+satisfaction a 5 isn’t spending meaningfully more than one who rates it
+a 1, and this holds true whether they eventually churned or not. That’s
+actually a fairly important finding, because it pushes back against a
+natural assumption: it’s tempting to treat `SatisfactionScore` as a
+proxy for customer value, but this chart shows that assumption doesn’t
+hold here.
+
+**Worth flagging carefully, though**: the two lines do diverge very
+*slightly* at the high-satisfaction end, churned customers trend a touch
+lower (~\$85) while retained customers trend a touch higher (~\$90)
+around satisfaction = 5. Given how flat and close together both lines
+are across the rest of the range, I’d treat this small gap as within
+noise rather than a real signal, unless it’s backed up by something more
+rigorous later (like a regression coefficient with a tight confidence
+interval). Better to state the finding as “no meaningful relationship
+between satisfaction and spending” rather than reaching for a subtler
+story that the data doesn’t strongly support.
+
+**Marketing implication**: if satisfaction doesn’t predict spend, then
+investing purely in “keep customers happy” initiatives may not move
+revenue on its own, retention and upsell strategies might need to target
+behavioral signals (like `TimeOnSite`, `WebsiteVisits`, or `PromoUsed`,
+which *did* show real relationships with `PurchaseAmount`) rather than
+satisfaction scores.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
