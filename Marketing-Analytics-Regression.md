@@ -513,6 +513,68 @@ and age contributes essentially nothing, segmentation and targeting
 strategies should prioritize income tier over age group, age-based
 marketing personas may not be adding much predictive value here.
 
+# Step 3: Outlier Detection
+
+Before moving into regression modeling, it’s worth taking a closer, more
+formal look at outliers, since they matter more for a linear regression
+model than almost any other analysis step so far. Ordinary least squares
+regression fits a line by *minimizing squared residuals*, which means a
+single extreme value can pull the entire fitted line toward it far more
+aggressively than it would under a method that doesn’t square its
+errors. In practice, this shows up in several ways:
+
+- **Inflated or deflated coefficients**, a handful of extreme points can
+  shift a slope enough to misrepresent the relationship for the other
+  99% of the data
+- **Violated assumptions**, outliers are a common cause of
+  heteroscedasticity (non-constant error variance) and non-normal
+  residuals, both of which we’ll test formally in Part B
+- **Misleading R-squared**, a model can appear to fit well overall while
+  badly misfitting the bulk of ordinary observations, simply because a
+  few extreme points anchor the fit
+- **Reduced generalizability**, a model overly influenced by rare
+  extreme cases may perform poorly on new, typical customers, which is
+  the opposite of what a business wants from a predictive model
+
+Because of this, choosing the *right way* to detect outliers matters
+almost as much as detecting them at all. Outlier detection methods
+generally fall into two families, and which one is appropriate depends
+on the shape of each variable’s distribution:
+
+- **Z-score method**, flags a value as an outlier if it falls more than
+  a fixed number of standard deviations (typically ±3) from the mean.
+  This method implicitly assumes the variable is **approximately
+  normally distributed**, since it relies on the mean and standard
+  deviation as meaningful reference points. Applying it to a skewed
+  variable can badly under, or over-flag outliers, since the mean itself
+  is pulled by the skew.
+- **IQR (interquartile range) method**, flags a value as an outlier if
+  it falls more than 1.5 times the interquartile range below the first
+  quartile or above the third. This method is **distribution- agnostic**
+  and far more robust to skewed data, since it’s built on quartiles
+  rather than the mean.
+
+This is exactly why **skewness** is checked first in this section,
+essentially a numeric extension of the visual distribution shapes we
+already saw in Step 1’s histograms (recall the clear right-skew in
+`TimeOnSite`, `Clicks`, `WebsiteVisits`, and `EmailOpens`, versus the
+closer-to-normal shape of `Income` and `PurchaseAmount`). A skewness
+value near 0 is a strong indicator a variable is close to normally
+distributed, making the z-score method appropriate; a skewness value
+meaningfully above or below 0 signals the distribution is lopsided, in
+which case the **IQR method** is the safer, more defensible choice.
+
+The workflow for this section, then, is:
+
+1.  Calculate skewness for every continuous variable
+2.  For variables close to normal (low skewness), apply the **z-score**
+    method for outlier detection
+3.  For variables that are meaningfully skewed, apply the **IQR** method
+    instead
+4.  Report outlier counts per variable, and flag (without necessarily
+    removing) any variable with a high proportion of outliers before
+    moving into regression modeling
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
