@@ -970,6 +970,36 @@ ggplot(pred_df, aes(x = actual, y = predicted)) +
 
 ![](Marketing-Analytics-Regression_files/figure-gfm/model1-actual-vs-predicted-1.png)<!-- -->
 
+## Step 4: Insights. Baseline Model (Income → PurchaseAmount)
+
+**Model equation (fitted):**
+$$\widehat{PurchaseAmount} = 45.43 + 0.000494 \times Income$$
+
+**Coefficients:** Income has a positive, highly significant effect (p \<
+2e-16), each additional **\$10,000** in income corresponds to about
+**\$4.94** more in predicted purchase amount. The 95% CI (0.000475 to
+0.000513) is tight and well away from zero, confirming a genuine effect,
+not noise.
+
+**Fit:** R^2 = 0.34, income alone explains **34%** of the variance in
+`PurchaseAmount`, a strong result for a single-predictor baseline. RMSE
+(\$17.42) and MAE (\$14.13) give a concrete sense of typical error: on
+average, predictions miss the actual purchase amount by around \$14–17.
+
+**Assumptions:** Homoscedasticity (BP p = 0.72) and independence (DW p =
+0.97) both hold cleanly, no evidence of non-constant variance or
+autocorrelated errors. Normality is technically violated (Shapiro p =
+0.0001), but the effect size is negligible (W = 0.9985, essentially 1);
+with n = 5,000, Shapiro-Wilk flags even tiny departures from perfect
+normality as “significant.” The Q-Q plot and residual histogram both
+show a near-perfect bell shape with only minor tail deviation, so this
+violation is not practically concerning for inference at this sample
+size.
+
+**Takeaway:** Income is a strong, well-behaved single predictor, a solid
+baseline. Model 2 now needs to show that adding more predictors
+meaningfully improves on this 34% R²^2 and \$17.42 RMSE benchmark.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
