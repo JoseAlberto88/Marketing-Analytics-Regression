@@ -763,6 +763,213 @@ the same conclusion.
     visualization to make the model’s real-world accuracy concrete
     rather than abstract.
 
+**Model 1, Part A: Visual check. Does a straight line fit ?**
+
+``` r
+ggplot(df, aes(x = Income, y = PurchaseAmount)) +
+  geom_point(alpha = 0.25, size = 1, color = "#7CA982") +
+  geom_smooth(method = "lm", color = "#2C5F2D", se = TRUE, linewidth = 1) +
+  geom_smooth(method = "loess", color = "#D9534F", se = FALSE, linewidth = 0.9, linetype = "dashed") +
+  theme_minimal() +
+  labs(
+    title = "PurchaseAmount vs. Income: Is a Straight Line a Reasonable Fit?",
+    subtitle = "Solid green = linear fit  |  Dashed red = flexible loess fit",
+    x = "Income ($)", y = "Purchase Amount ($)"
+  )
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/model1-visual-check-1.png)<!-- -->
+
+**Model 1, Part B: Assumption Check (Preliminary Fit)**
+
+``` r
+library(lmtest)
+
+model1_prelim <- lm(PurchaseAmount ~ Income, data = df)
+
+cat("--- Breusch-Pagan (Homoscedasticity) ---\n")
+```
+
+    ## --- Breusch-Pagan (Homoscedasticity) ---
+
+``` r
+print(bptest(model1_prelim))
+```
+
+    ## 
+    ##  studentized Breusch-Pagan test
+    ## 
+    ## data:  model1_prelim
+    ## BP = 0.12775, df = 1, p-value = 0.7208
+
+``` r
+cat("\n--- Durbin-Watson (Independence of Residuals) ---\n")
+```
+
+    ## 
+    ## --- Durbin-Watson (Independence of Residuals) ---
+
+``` r
+print(dwtest(model1_prelim))
+```
+
+    ## 
+    ##  Durbin-Watson test
+    ## 
+    ## data:  model1_prelim
+    ## DW = 2.054, p-value = 0.9718
+    ## alternative hypothesis: true autocorrelation is greater than 0
+
+``` r
+cat("\n--- Shapiro-Wilk (Normality of Residuals) ---\n")
+```
+
+    ## 
+    ## --- Shapiro-Wilk (Normality of Residuals) ---
+
+``` r
+set.seed(42)
+resid_vals <- residuals(model1_prelim)
+resid_sample <- if (length(resid_vals) > 5000) sample(resid_vals, 5000) else resid_vals
+print(shapiro.test(resid_sample))
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  resid_sample
+    ## W = 0.99853, p-value = 0.000144
+
+``` r
+diag_df <- data.frame(
+  fitted = fitted(model1_prelim),
+  resid = residuals(model1_prelim),
+  std_resid = rstandard(model1_prelim)
+)
+
+p1 <- ggplot(diag_df, aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.25, size = 1, color = "#5B8FB9") +
+  geom_hline(yintercept = 0, color = "#D9534F", linetype = "dashed", linewidth = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, color = "#F0A500", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Residuals vs. Fitted", subtitle = "Checks: Linearity & Homoscedasticity",
+       x = "Fitted Values", y = "Residuals")
+
+p2 <- ggplot(diag_df, aes(sample = std_resid)) +
+  stat_qq(alpha = 0.4, size = 1, color = "#8E7CC3") +
+  stat_qq_line(color = "#D9534F", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Normal Q-Q Plot", subtitle = "Checks: Normality of Residuals",
+       x = "Theoretical Quantiles", y = "Standardized Residuals")
+
+p3 <- ggplot(diag_df, aes(x = resid)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, fill = "#A7D3A0", color = "white", alpha = 0.85) +
+  geom_density(color = "#2C5F2D", linewidth = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(diag_df$resid), sd = sd(diag_df$resid)),
+                color = "#D9534F", linetype = "dashed", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Distribution of Residuals", subtitle = "Green = actual density | Red dashed = normal curve",
+       x = "Residuals", y = "Density")
+
+p4 <- ggplot(diag_df, aes(x = fitted, y = sqrt(abs(std_resid)))) +
+  geom_point(alpha = 0.25, size = 1, color = "#5B8FB9") +
+  geom_smooth(method = "loess", se = FALSE, color = "#F0A500", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Scale-Location Plot", subtitle = "Checks: Homoscedasticity (spread)",
+       x = "Fitted Values", y = expression(sqrt("|Standardized Residuals|")))
+
+(p1 + p2) / (p3 + p4) + plot_annotation(
+  title = "Model 1 Assumption Checks: Income -> PurchaseAmount",
+  theme = theme(plot.title = element_text(size = 15, face = "bold"))
+)
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/model1-assumption-plots-1.png)<!-- -->
+**Model 1, Part C: Final Foit, Full Output, and Performance Metrics**
+
+``` r
+model1 <- lm(PurchaseAmount ~ Income, data = df)
+summary(model1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = PurchaseAmount ~ Income, data = df)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -55.924 -12.137  -0.061  12.156  59.063 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 4.543e+01  9.069e-01   50.10   <2e-16 ***
+    ## Income      4.940e-04  9.737e-06   50.73   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 17.43 on 4998 degrees of freedom
+    ## Multiple R-squared:  0.3399, Adjusted R-squared:  0.3398 
+    ## F-statistic:  2574 on 1 and 4998 DF,  p-value: < 2.2e-16
+
+``` r
+confint(model1)
+```
+
+    ##                    2.5 %       97.5 %
+    ## (Intercept) 4.365389e+01 4.720955e+01
+    ## Income      4.748656e-04 5.130421e-04
+
+``` r
+predictions <- predict(model1)
+actuals <- df$PurchaseAmount
+
+rmse <- sqrt(mean((actuals - predictions)^2))
+mae <- mean(abs(actuals - predictions))
+r2 <- summary(model1)$r.squared
+adj_r2 <- summary(model1)$adj.r.squared
+
+cat("R-squared:", round(r2, 4), "\n")
+```
+
+    ## R-squared: 0.3399
+
+``` r
+cat("Adjusted R-squared:", round(adj_r2, 4), "\n")
+```
+
+    ## Adjusted R-squared: 0.3398
+
+``` r
+cat("RMSE: $", round(rmse, 2), "\n")
+```
+
+    ## RMSE: $ 17.42
+
+``` r
+cat("MAE: $", round(mae, 2), "\n")
+```
+
+    ## MAE: $ 14.13
+
+``` r
+pred_df <- data.frame(actual = actuals, predicted = predictions)
+
+ggplot(pred_df, aes(x = actual, y = predicted)) +
+  geom_point(alpha = 0.25, size = 1, color = "#8FBFE0") +
+  geom_abline(slope = 1, intercept = 0, color = "#D9534F", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = min(pred_df$actual) + 15, y = max(pred_df$predicted) - 5,
+           label = paste0("R\u00b2 = ", round(r2, 3), "\nRMSE = $", round(rmse, 2)),
+           hjust = 0, size = 4.2, fontface = "bold", color = "#2C5F2D") +
+  theme_minimal() +
+  labs(
+    title = "Model 1: Actual vs. Predicted Purchase Amount",
+    subtitle = "Dashed red line = perfect prediction (actual = predicted)",
+    x = "Actual Purchase Amount ($)", y = "Predicted Purchase Amount ($)"
+  )
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/model1-actual-vs-predicted-1.png)<!-- -->
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
