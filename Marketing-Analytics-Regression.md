@@ -575,6 +575,89 @@ The workflow for this section, then, is:
     removing) any variable with a high proportion of outliers before
     moving into regression modeling
 
+**Skewness Calculation plus Conditional Method Selection**
+
+``` r
+library(e1071)
+
+skew_vals <- sapply(df[, continuous_vars], skewness)
+
+count_outliers_zscore <- function(x) {
+  z <- (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+  sum(abs(z) > 3, na.rm = TRUE)
+}
+
+count_outliers_iqr <- function(x) {
+  q1 <- quantile(x, 0.25, na.rm = TRUE); q3 <- quantile(x, 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+  sum(x < (q1 - 1.5 * iqr) | x > (q3 + 1.5 * iqr), na.rm = TRUE)
+}
+
+skew_threshold <- 0.5  # |skewness| below this is treated as "near-normal"
+
+outlier_results <- data.frame(Variable = continuous_vars, Skewness = round(skew_vals, 3)) %>%
+  mutate(
+    Method = ifelse(abs(Skewness) < skew_threshold, "Z-score (near-normal)", "IQR (skewed)"),
+    Outliers = mapply(function(v, m) {
+      x <- df[[v]]
+      if (m == "Z-score (near-normal)") count_outliers_zscore(x) else count_outliers_iqr(x)
+    }, Variable, Method),
+    Pct = round(Outliers / nrow(df) * 100, 2)
+  ) %>%
+  arrange(desc(Outliers))
+
+print(outlier_results, row.names = FALSE)
+```
+
+    ##           Variable Skewness                Method Outliers  Pct
+    ##             Clicks    0.577          IQR (skewed)       53 1.06
+    ##      WebsiteVisits    0.295 Z-score (near-normal)       16 0.32
+    ##     PurchaseAmount    0.032 Z-score (near-normal)       10 0.20
+    ##             Income    0.059 Z-score (near-normal)        6 0.12
+    ##         TimeOnSite    0.117 Z-score (near-normal)        6 0.12
+    ##                Age   -0.013 Z-score (near-normal)        0 0.00
+    ##        PagesViewed    0.034 Z-score (near-normal)        0 0.00
+    ##      AdImpressions   -0.008 Z-score (near-normal)        0 0.00
+    ##         EmailOpens    0.020 Z-score (near-normal)        0 0.00
+    ##  SatisfactionScore   -0.034 Z-score (near-normal)        0 0.00
+
+**Visualization: Skewness plus Resulting Outlier Counts, side by sid**
+
+``` r
+library(patchwork)
+
+results_sorted1 <- outlier_results %>% mutate(Variable = factor(Variable, levels = Variable[order(Skewness)]))
+
+p1 <- ggplot(results_sorted1, aes(x = Skewness, y = Variable, color = Method)) +
+  geom_segment(aes(x = 0, xend = Skewness, y = Variable, yend = Variable), linewidth = 1.1, alpha = 0.7) +
+  geom_point(size = 4) +
+  geom_vline(xintercept = c(-0.5, 0.5), linetype = "dashed", color = "grey60", linewidth = 0.4) +
+  scale_color_manual(values = c("Z-score (near-normal)" = "#A7D3A0", "IQR (skewed)" = "#F4B8B0")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Skewness by Variable", subtitle = "Dashed lines mark the |0.5| near-normal threshold",
+       x = "Skewness", y = NULL, color = "Method Triggered")
+
+results_sorted2 <- outlier_results %>% mutate(Variable = factor(Variable, levels = Variable[order(Outliers)]))
+
+p2 <- ggplot(results_sorted2, aes(x = Outliers, y = Variable, fill = Method)) +
+  geom_col(width = 0.6, alpha = 0.9) +
+  geom_text(aes(label = Outliers), hjust = -0.3, size = 3.5) +
+  scale_fill_manual(values = c("Z-score (near-normal)" = "#A7D3A0", "IQR (skewed)" = "#F4B8B0")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  xlim(0, max(results_sorted2$Outliers) * 1.25) +
+  labs(title = "Outliers Detected", subtitle = "Using the method matched to each distribution shape",
+       x = "Outlier Count", y = NULL)
+
+p1 + p2 + plot_annotation(
+  title = "Step 3: Outlier Detection. kewness-Guided Method Selection",
+  theme = theme(plot.title = element_text(size = 15, face = "bold"))
+)
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/step3-outlier-viz-1.png)<!-- -->
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
