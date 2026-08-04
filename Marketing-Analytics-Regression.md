@@ -1001,6 +1001,100 @@ size.
 baseline. Model 2 now needs to show that adding more predictors
 meaningfully improves on this 34% R²^2 and \$17.42 RMSE benchmark.
 
+# Step 5: Multiple Regression (3–5 Predictors)
+
+Model 1 established a baseline using `Income` alone (R^2 = 0.34). This
+section builds Model 2, a multiple regression using 3–5 predictors,
+selected through a three-stage, evidence-based process rather than
+picking variables by assumption:
+
+1.  **Visual screening**. Every candidate predictor is plotted against
+    `PurchaseAmount`, with its correlation coefficient labeled directly
+    on the panel, to see at a glance which variables show a real
+    relationship worth pursuing.
+2.  **Correlation matrix**. A full numeric cross-check across all
+    candidates, confirming the visual screening and revealing any strong
+    correlations *between* predictors themselves (an early warning sign
+    for multicollinearity).
+3.  **VIF (Variance Inflation Factor)**. Applied to the shortlisted
+    predictors that survive stage 1 and 2, to formally confirm none of
+    them are redundant with each other before finalizing the model.
+
+The goal is a final list of **4 predictors**, each contributing real,
+non-redundant explanatory power, ideally with `Income` still among them,
+given its strength in Model 1.
+
+**Step 5a: Visual Screening**
+
+``` r
+candidate_continuous <- c("Age","Income","WebsiteVisits","TimeOnSite","PagesViewed",
+                           "AdImpressions","Clicks","EmailOpens","SatisfactionScore")
+
+df_long_screen <- df %>% select(all_of(c(candidate_continuous, "PurchaseAmount"))) %>%
+  pivot_longer(all_of(candidate_continuous), names_to = "Variable", values_to = "Value")
+
+cor_labels <- df_long_screen %>%
+  group_by(Variable) %>%
+  summarise(r = round(cor(Value, PurchaseAmount), 2)) %>%
+  mutate(label = paste0("r = ", r))
+
+ggplot(df_long_screen, aes(x = Value, y = PurchaseAmount, color = Variable)) +
+  geom_point(alpha = 0.2, size = 0.7) +
+  geom_smooth(method = "lm", color = "black", linewidth = 0.6, se = FALSE) +
+  geom_text(data = cor_labels, aes(x = -Inf, y = Inf, label = label),
+            hjust = -0.15, vjust = 1.5, inherit.aes = FALSE, size = 3.6, fontface = "bold") +
+  facet_wrap(~Variable, scales = "free_x") +
+  scale_color_brewer(palette = "Set3") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Step 5a: Screening Candidate Predictors Against PurchaseAmount",
+       subtitle = "Correlation coefficient (r) shown per panel", x = NULL, y = "Purchase Amount")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/step5a-screening-1.png)<!-- -->
+
+``` r
+df_promo <- df %>% mutate(PromoUsed = factor(PromoUsed, labels = c("No Promo", "Used Promo")))
+
+ggplot(df_promo, aes(x = PromoUsed, y = PurchaseAmount, fill = PromoUsed)) +
+  geom_boxplot(alpha = 0.85, outlier.alpha = 0.3) +
+  scale_fill_manual(values = c("#F4B8B0", "#A7D3A0")) +
+  theme_minimal() + theme(legend.position = "none") +
+  labs(title = "PromoUsed vs. PurchaseAmount", x = NULL, y = "Purchase Amount ($)")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/step5a-promo-boxplot-1.png)<!-- -->
+
+**Step 5b: Correlation Matrix (Candidates Plus Target)**
+
+``` r
+candidate_all <- c(candidate_continuous, "PromoUsed", "PurchaseAmount")
+cor_matrix_step5 <- cor(df[, candidate_all], use = "complete.obs")
+round(cor_matrix_step5["PurchaseAmount", ], 3) %>% sort(decreasing = TRUE)
+```
+
+    ##    PurchaseAmount            Income         PromoUsed       PagesViewed 
+    ##             1.000             0.583             0.436             0.373 
+    ##     WebsiteVisits        TimeOnSite        EmailOpens               Age 
+    ##             0.294             0.005             0.004             0.000 
+    ##            Clicks     AdImpressions SatisfactionScore 
+    ##            -0.005            -0.006            -0.008
+
+**Step 5c: VIF Check on the Shortlist**
+
+``` r
+library(car)
+
+# Update this formula with your top candidates once you see the real correlation numbers
+candidate_model <- lm(PurchaseAmount ~ TimeOnSite + Income + WebsiteVisits + PromoUsed + SatisfactionScore, data = df)
+vif(candidate_model)
+```
+
+    ##        TimeOnSite            Income     WebsiteVisits         PromoUsed 
+    ##          1.000716          1.001361          1.000355          1.001382 
+    ## SatisfactionScore 
+    ##          1.000665
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
