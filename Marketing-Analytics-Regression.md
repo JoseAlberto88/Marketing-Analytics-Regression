@@ -711,6 +711,58 @@ to treat specific rows differently should be targeted and well-justified
 (especially for `PurchaseAmount`), rather than applying a blanket
 removal rule across the dataset.
 
+# Step 4: Baseline Model (1 Predictor)
+
+With the data cleaned, explored, and outlier behavior understood, this
+section builds the first regression model: a **baseline model using a
+single predictor**. The purpose of a baseline model isn’t to be the
+“best” model, it’s to establish a simple, interpretable reference point
+that every later, more complex model (Model 2’s multiple regression,
+Model 3’s improved form) must actually outperform to justify its added
+complexity.
+
+**Why `Income` was chosen as the single predictor, based on evidence
+rather than assumption:**
+
+The assignment explicitly requires justifying regression choices “based
+on your actual data, not theory alone,” and two pieces of evidence from
+the business-question EDA in Step 2 point clearly to `Income`:
+
+- The **age × income heatmap** (Question 5) showed a strong, consistent
+  gradient in `PurchaseAmount` moving across income tiers, while the
+  same chart showed almost no movement across age brackets at any fixed
+  income level. Income, not age, was doing essentially all of the
+  explanatory work.
+- The **time-on-site decile analysis** (Question 2), a variable that
+  looked visually promising in Step 1’s histograms, turned out to be
+  essentially flat against `PurchaseAmount` once tested directly, ruling
+  it out as a strong single-predictor candidate despite its histogram
+  shape.
+
+In short, `Income` wasn’t chosen because it was the “obvious”
+demographic variable to reach for, it was chosen because two independent
+visual investigations in the business-question section both pointed to
+the same conclusion.
+
+**Structure of this section:**
+
+1.  **Visual check**, a scatterplot of `Income` against `PurchaseAmount`
+    with both a straight-line fit and a flexible loess fit overlaid, to
+    confirm visually (before committing to any formula) that a linear
+    relationship is a reasonable approximation of the real pattern.
+2.  **Assumption checks**, before finalizing the model, the standard OLS
+    assumptions are tested directly: linearity and homoscedasticity
+    (residuals vs. fitted plot, Breusch-Pagan test), independence
+    (Durbin-Watson test), and normality of residuals (Q-Q plot,
+    Shapiro-Wilk test). Each assumption is evaluated on its own, since a
+    model can be usable even if one assumption is imperfectly met, as
+    long as the violation and its implications are acknowledged.
+3.  **Final model fit**, the full regression output (coefficients,
+    p-values, confidence intervals), followed by performance metrics
+    (R^2, adjusted R^2, RMSE, MAE) and an actual-vs-predicted
+    visualization to make the model’s real-world accuracy concrete
+    rather than abstract.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
