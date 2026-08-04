@@ -1304,6 +1304,126 @@ Model 2 satisfies every core OLS assumption cleanly:
 assumption violations to flag, a strong, defensible model as is, and a
 clean benchmark for Model 3 to try to improve upon.
 
+**Step 5d: Model 2.Final Fit and Output**
+
+**Equation:**
+
+$$\widehat{PurchaseAmount} = \beta_0 + \beta_1 \times Income + \beta_2 \times PromoUsed + \beta_3 \times PagesViewed + \beta_4 \times WebsiteVisits$$
+
+``` r
+model2 <- lm(PurchaseAmount ~ Income + PromoUsed + PagesViewed + WebsiteVisits, data = df)
+summary(model2)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = PurchaseAmount ~ Income + PromoUsed + PagesViewed + 
+    ##     WebsiteVisits, data = df)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -41.550  -6.915   0.003   6.964  34.700 
+    ## 
+    ## Coefficients:
+    ##                 Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   -1.386e-02  7.580e-01  -0.018    0.985    
+    ## Income         5.027e-04  5.666e-06  88.729   <2e-16 ***
+    ## PromoUsed      2.001e+01  2.869e-01  69.757   <2e-16 ***
+    ## PagesViewed    1.480e+00  2.620e-02  56.492   <2e-16 ***
+    ## WebsiteVisits  2.002e+00  4.519e-02  44.295   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 10.13 on 4995 degrees of freedom
+    ## Multiple R-squared:  0.7769, Adjusted R-squared:  0.7767 
+    ## F-statistic:  4349 on 4 and 4995 DF,  p-value: < 2.2e-16
+
+``` r
+confint(model2)
+```
+
+    ##                      2.5 %       97.5 %
+    ## (Intercept)   -1.499958476 1.472238e+00
+    ## Income         0.000491629 5.138447e-04
+    ## PromoUsed     19.448152202 2.057290e+01
+    ## PagesViewed    1.428835151 1.531570e+00
+    ## WebsiteVisits  1.913120288 2.090307e+00
+
+``` r
+predictions2 <- predict(model2)
+actuals <- df$PurchaseAmount
+
+rmse2 <- sqrt(mean((actuals - predictions2)^2))
+mae2 <- mean(abs(actuals - predictions2))
+r2_2 <- summary(model2)$r.squared
+adj_r2_2 <- summary(model2)$adj.r.squared
+
+cat("R-squared:", round(r2_2, 4), "\n")
+```
+
+    ## R-squared: 0.7769
+
+``` r
+cat("Adjusted R-squared:", round(adj_r2_2, 4), "\n")
+```
+
+    ## Adjusted R-squared: 0.7767
+
+``` r
+cat("RMSE: $", round(rmse2, 2), "\n")
+```
+
+    ## RMSE: $ 10.13
+
+``` r
+cat("MAE: $", round(mae2, 2), "\n")
+```
+
+    ## MAE: $ 8.12
+
+**Standardized Coefficient Visualization (fair comparison across
+variables)**
+
+``` r
+library(broom)
+
+df_scaled <- df %>% mutate(across(c(Income, PagesViewed, WebsiteVisits, PurchaseAmount), scale))
+model2_scaled <- lm(PurchaseAmount ~ Income + PromoUsed + PagesViewed + WebsiteVisits, data = df_scaled)
+coef_df <- tidy(model2_scaled, conf.int = TRUE) %>% filter(term != "(Intercept)")
+
+ggplot(coef_df, aes(x = reorder(term, estimate), y = estimate, fill = p.value < 0.05)) +
+  geom_col(width = 0.55, alpha = 0.85) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, color = "grey30") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  coord_flip() +
+  scale_fill_manual(values = c("TRUE" = "#A7D3A0", "FALSE" = "#F4B8B0"),
+                     labels = c("TRUE" = "Significant (p<0.05)", "FALSE" = "Not significant"), name = NULL) +
+  theme_minimal() +
+  labs(title = "Model 2: Standardized Coefficients with 95% CI",
+       subtitle = "Standardized so all predictors are on the same scale, for fair comparison",
+       x = NULL, y = "Standardized Coefficient (Beta)")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/model2-coef-viz-1.png)<!-- -->
+**Actual vs. Predicted**
+
+``` r
+pred_df2 <- data.frame(actual = actuals, predicted = predictions2)
+
+ggplot(pred_df2, aes(x = actual, y = predicted)) +
+  geom_point(alpha = 0.25, size = 1, color = "#B39DDB") +
+  geom_abline(slope = 1, intercept = 0, color = "#D9534F", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = min(pred_df2$actual) + 15, y = max(pred_df2$predicted) - 5,
+           label = paste0("R\u00b2 = ", round(r2_2, 3), "\nRMSE = $", round(rmse2, 2)),
+           hjust = 0, size = 4.2, fontface = "bold", color = "#2C5F2D") +
+  theme_minimal() +
+  labs(title = "Model 2: Actual vs. Predicted Purchase Amount",
+       subtitle = "Dashed red line = perfect prediction (actual = predicted)",
+       x = "Actual Purchase Amount ($)", y = "Predicted Purchase Amount ($)")
+```
+
+![](Marketing-Analytics-Regression_files/figure-gfm/model2-actual-vs-predicted-1.png)<!-- -->
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
