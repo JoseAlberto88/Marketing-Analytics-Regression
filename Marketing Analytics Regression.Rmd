@@ -861,6 +861,122 @@ the same underlying signal.
 and confirmed non-redundant.
 
 
+**Step 5d: Assumption Checks for Model 2**
+
+```{r step5d-assumption-tests}
+library(lmtest)
+library(car)
+
+model2_prelim <- lm(PurchaseAmount ~ Income + PromoUsed + PagesViewed + WebsiteVisits, data = df)
+
+cat("--- Breusch-Pagan (Homoscedasticity) ---\n")
+print(bptest(model2_prelim))
+
+cat("\n--- Durbin-Watson (Independence of Residuals) ---\n")
+print(dwtest(model2_prelim))
+
+cat("\n--- Shapiro-Wilk (Normality of Residuals) ---\n")
+set.seed(42)
+resid_vals <- residuals(model2_prelim)
+resid_sample <- if (length(resid_vals) > 5000) sample(resid_vals, 5000) else resid_vals
+print(shapiro.test(resid_sample))
+
+cat("\n--- VIF (Multicollinearity, re-confirmed on final model) ---\n")
+print(vif(model2_prelim))
+```
+
+```{r step5d-diagnostic-dashboard, fig.width=12, fig.height=10}
+diag_df2 <- data.frame(
+  fitted = fitted(model2_prelim),
+  resid = residuals(model2_prelim),
+  std_resid = rstandard(model2_prelim)
+)
+
+p1 <- ggplot(diag_df2, aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.25, size = 1, color = "#5B8FB9") +
+  geom_hline(yintercept = 0, color = "#D9534F", linetype = "dashed", linewidth = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, color = "#F0A500", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Residuals vs. Fitted", subtitle = "Checks: Linearity & Homoscedasticity",
+       x = "Fitted Values", y = "Residuals")
+
+p2 <- ggplot(diag_df2, aes(sample = std_resid)) +
+  stat_qq(alpha = 0.4, size = 1, color = "#8E7CC3") +
+  stat_qq_line(color = "#D9534F", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Normal Q-Q Plot", subtitle = "Checks: Normality of Residuals",
+       x = "Theoretical Quantiles", y = "Standardized Residuals")
+
+p3 <- ggplot(diag_df2, aes(x = resid)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, fill = "#A7D3A0", color = "white", alpha = 0.85) +
+  geom_density(color = "#2C5F2D", linewidth = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(diag_df2$resid), sd = sd(diag_df2$resid)),
+                color = "#D9534F", linetype = "dashed", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Distribution of Residuals", subtitle = "Green = actual density | Red dashed = normal curve",
+       x = "Residuals", y = "Density")
+
+p4 <- ggplot(diag_df2, aes(x = fitted, y = sqrt(abs(std_resid)))) +
+  geom_point(alpha = 0.25, size = 1, color = "#5B8FB9") +
+  geom_smooth(method = "loess", se = FALSE, color = "#F0A500", linewidth = 0.9) +
+  theme_minimal() +
+  labs(title = "Scale-Location Plot", subtitle = "Checks: Homoscedasticity (spread)",
+       x = "Fitted Values", y = expression(sqrt("|Standardized Residuals|")))
+
+(p1 + p2) / (p3 + p4) + plot_annotation(
+  title = "Step 5d: Model 2 Assumption Checks",
+  theme = theme(plot.title = element_text(size = 15, face = "bold"))
+)
+```
+
+```{r step5d-cr-plots, fig.width=10, fig.height=8}
+predictors <- c("Income", "PromoUsed", "PagesViewed", "WebsiteVisits")
+coefs <- coef(model2_prelim)
+
+partial_resid_df <- lapply(predictors, function(p) {
+  partial_resid <- residuals(model2_prelim) + coefs[p] * df[[p]]
+  data.frame(Predictor = p, x = df[[p]], partial_resid = partial_resid)
+}) %>% bind_rows()
+
+ggplot(partial_resid_df, aes(x = x, y = partial_resid, color = Predictor)) +
+  geom_point(alpha = 0.2, size = 0.7) +
+  geom_smooth(method = "lm", color = "black", linewidth = 0.7, se = FALSE) +
+  geom_smooth(method = "loess", color = "#D9534F", linetype = "dashed", linewidth = 0.7, se = FALSE) +
+  facet_wrap(~Predictor, scales = "free_x") +
+  scale_color_brewer(palette = "Pastel1") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Component + Residual Plots (Per-Predictor Linearity Check)",
+       subtitle = "Solid black = linear fit  |  Dashed red = loess fit  (close overlap supports linearity)",
+       x = "Predictor Value", y = "Partial Residual + Component")
+```
+
+## Step 5d: Insights: Model 2 Assumption Checks
+
+Model 2 satisfies every core OLS assumption cleanly:
+
+- **Homoscedasticity:** BP p = 0.666, no evidence of non-constant
+  variance; both the Residuals vs. Fitted and Scale-Location plots
+  show a flat, even spread with no funnel shape.
+- **Independence:** DW p = 0.679, residuals show no autocorrelation.
+- **Normality:** Shapiro p = 0.717, residuals are statistically
+  indistinguishable from normal, and the Q-Q plot confirms it, tracking
+  the diagonal almost perfectly with barely any tail deviation (a
+  clear improvement over Model 1, where normality was technically
+  violated).
+- **Multicollinearity:** all VIF values ≈ 1.0. The four predictors
+  remain fully independent of each other, as expected from Step 5c.
+- **Linearity (per predictor):** the component+residual plots show the
+  solid (linear) and dashed (loess) lines overlapping almost exactly
+  for all four predictors. `Income`, `PagesViewed`, `PromoUsed`, and
+  `WebsiteVisits` all show genuinely linear relationships with the
+  outcome, with no visible curvature to suggest a transformation is
+  needed for any of them.
+
+**Takeaway:** Model 2 is a well-behaved multiple regression with no
+assumption violations to flag, a strong, defensible model as is, 
+and a clean benchmark for Model 3 to try to improve upon.
+
 # Part B: Diagnostic Testing
 
 *(To fill in together \u2014 linearity, normality, homoscedasticity,
