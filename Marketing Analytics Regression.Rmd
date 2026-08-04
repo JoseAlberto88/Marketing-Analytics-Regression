@@ -824,6 +824,43 @@ candidate_model <- lm(PurchaseAmount ~ TimeOnSite + Income + WebsiteVisits + Pro
 vif(candidate_model)
 ```
 
+```{r step5c-vif-final}
+model2_candidate <- lm(PurchaseAmount ~ Income + PromoUsed + PagesViewed + WebsiteVisits, data = df)
+vif(model2_candidate)
+```
+
+## Step 5: Predictor Selection Process
+
+**Step 5a. Visual screening:** Every candidate predictor was plotted
+against `PurchaseAmount`, with a fitted linear trend and its
+correlation coefficient labeled directly on each panel. This gave an
+immediate visual read on which variables carried real signal versus
+which were essentially flat noise. `Income` and `PagesViewed` showed
+clear upward slopes; `WebsiteVisits` showed a milder but real slope;
+`PromoUsed`'s boxplot showed a clear median shift between groups.
+Every other candidate (`Age`, `Clicks`, `EmailOpens`, `AdImpressions`,
+`SatisfactionScore`, `TimeOnSite`) showed a visually flat trend line.
+
+**Step 5b. Correlation matrix:** This confirmed the visual screening
+numerically, and revealed a striking natural cutoff: four predictors
+(`Income` = 0.583, `PromoUsed` = 0.436, `PagesViewed` = 0.373,
+`WebsiteVisits` = 0.294) sat in a completely different tier from every
+other variable, which all clustered within ±0.008 of zero. This made
+the choice of exactly which four predictors to shortlist essentially
+unambiguous, driven by the data rather than a judgment call.
+
+**Step 5c. VIF (multicollinearity check):** Before finalizing the
+four predictors, a VIF check confirmed they don't meaningfully overlap
+with each other (all values ≈ 1.0, far below the concern threshold of
+5). This means each predictor contributes genuinely independent
+explanatory power, rather than several variables competing to explain
+the same underlying signal.
+
+**Result:** The final Model 2 predictor set is `Income`, `PromoUsed`,
+`PagesViewed`, and `WebsiteVisits`, four variables, evidence-selected,
+and confirmed non-redundant.
+
+
 # Part B: Diagnostic Testing
 
 *(To fill in together \u2014 linearity, normality, homoscedasticity,
