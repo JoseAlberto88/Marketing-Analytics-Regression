@@ -970,9 +970,10 @@ ggplot(pred_df, aes(x = actual, y = predicted)) +
 
 ![](Marketing-Analytics-Regression_files/figure-gfm/model1-actual-vs-predicted-1.png)<!-- -->
 
-## Step 4: Insights. Baseline Model (Income → PurchaseAmount)
+## Step 4: Insights. Baseline Model (Income predicts PurchaseAmount)
 
 **Model equation (fitted):**
+
 $$\widehat{PurchaseAmount} = 45.43 + 0.000494 \times Income$$
 
 **Coefficients:** Income has a positive, highly significant effect (p \<
