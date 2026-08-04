@@ -484,10 +484,64 @@ p2 <- ggplot(results_sorted2, aes(x = Outliers, y = Variable, fill = Method)) +
        x = "Outlier Count", y = NULL)
 
 p1 + p2 + plot_annotation(
-  title = "Step 3: Outlier Detection. kewness-Guided Method Selection",
+  title = "Step 3: Outlier Detection. Kewness-Guided Method Selection",
   theme = theme(plot.title = element_text(size = 15, face = "bold"))
 )
 ```
+
+## Step 3: Insights from Outlier Detection
+
+**Almost every variable in this dataset is close to symmetric.** Only
+one variable, `Clicks` (skewness = 0.577), crossed the ±0.5 threshold
+into "skewed" territory and triggered the IQR method. Every other
+variable, including `TimeOnSite` (skewness = 0.117), which showed a
+visibly right-skewed histogram back in Step 1, turned out to be much
+closer to normal than expected once measured numerically. This is a
+useful reminder that a histogram's *visual* shape can look more skewed
+than the actual skewness statistic supports, especially with a large
+sample size, which is exactly why we calculate skewness formally
+instead of relying on eyeballing the shape alone.
+
+**Overall outlier prevalence is very low across the board.** The
+highest outlier count belongs to `Clicks` at just 53 rows (1.06% of
+the dataset), and five variables (`Age`, `PagesViewed`, `AdImpressions`,
+`EmailOpens`, `SatisfactionScore`) show **zero** outliers under either
+method. This is a genuinely reassuring result heading into regression
+modeling: with no variable showing more than roughly 1% extreme values,
+outliers are unlikely to be a dominant force distorting model
+coefficients later in Part A.
+
+**A caution on `PurchaseAmount` specifically.** Even though its outlier
+count is small (10 rows, 0.20%), this is the **dependent variable**,
+any outlier here isn't just a data quirk to note in passing, it directly
+shapes the regression line itself, since OLS minimizes *squared*
+residuals and a handful of extreme purchase values can pull the fitted
+line disproportionately toward them. Before deciding whether to keep,
+transform, or investigate these 10 rows, it's worth looking at them
+individually: are they legitimately large purchases from real
+high-value customers, or do they look like data entry errors (e.g., an
+extra zero)? If they're genuine, they likely represent real revenue
+behavior worth preserving in the model rather than treating as noise.
+
+**A similar caution applies to `Clicks` and `WebsiteVisits`.** These
+outliers may not be errors at all; they could represent a small
+segment of unusually engaged users, the "power users" who click and
+browse far more than a typical customer. Removing them purely because
+they're statistical outliers risks discarding exactly the behavioral
+signal a marketing team might care about most (e.g., identifying
+what drives high engagement). The safer approach, consistent with the
+reasoning from Step 3's introduction, is to **flag these counts and
+inspect the affected rows, not to delete them automatically**, a
+decision to exclude any of them should be justified by evidence of a
+data error, not just by the statistical rule that flagged them.
+
+**Net takeaway for Part A:** with such low outlier prevalence overall,
+this dataset does not appear to have a systemic outlier problem that
+would force an early transformation or exclusion strategy. Any
+decision to treat specific rows differently should be targeted and
+well-justified (especially for `PurchaseAmount`), rather than applying
+a blanket removal rule across the dataset.
+
 
 # Part B: Diagnostic Testing
 
