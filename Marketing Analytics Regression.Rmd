@@ -1090,9 +1090,70 @@ predictor selection process, and sets a high bar (R^2 = 0.777,
 RMSE = $10.13) for Model 3 to try to beat.
 
 
+## Model 3: Generalized Additive Model (GAM)
 
-**HELLO**
+### What is a GAM?
 
+A standard multiple regression forces every predictor into a straight
+line: for a one-unit increase in `X`, the outcome always changes by
+the same fixed amount `β`, no matter where you are on the scale of
+`X`. A **Generalized Additive Model** relaxes this assumption. Instead
+of fitting a single slope, it fits a flexible **smooth curve** for
+each predictor, letting the data itself decide the shape:
+
+$$\widehat{Y} = \beta_0 + f_1(X_1) + f_2(X_2) + \dots + f_k(X_k)$$
+
+where each $f_j$ is a smooth function estimated directly from the data,
+rather than assumed in advance. The "additive" part means these
+individual curves are still added together, just like in linear
+regression, they just don't each have to be *straight*.
+
+### Why it's useful
+
+- **It can reveal relationships a correlation coefficient would
+  completely miss.** Pearson correlation only measures straight-line
+  association. A variable can have a strong, real relationship with
+  the outcome, U-shaped, wave-shaped, a threshold effect, and still
+  show a correlation near zero, because the positive and negative
+  parts of the curve cancel out.
+- **It's a rigorous, unbiased test of linearity.** Rather than
+  guessing at a transformation (log, square, etc.) and hoping it fits,
+  a GAM lets the true shape emerge from the data with no assumption
+  about what that shape should look like.
+- **The `edf` (effective degrees of freedom) gives a direct,
+  interpretable diagnostic**: `edf ≈ 1` means the relationship is
+  essentially linear (a straight line was the best the model could
+  find); `edf` meaningfully above 1 means real curvature exists.
+
+### When it's *not* useful (or even a poor choice)
+
+- **When the true relationship really is linear.** A GAM adds
+  flexibility and complexity for no benefit if there's no curve to
+  find. It will simply converge back to a straight line (as we saw
+  directly in this project, with every `edf` = 1.000).
+- **Interpretability drops.** A linear coefficient gives a clean,
+  quotable sentence ("+$5 for every $10,000 in income"). A smooth
+  curve doesn't reduce to a single number; you need the plot itself to
+  communicate the effect, which is harder to put in a one-line
+  executive summary.
+- **Risk of overfitting with small samples.** A smooth curve has more
+  parameters to estimate than a straight line; with limited data, it
+  can start fitting noise rather than signal (this is exactly what
+  the `edf` diagnostic and significance test guard against).
+
+### Assumptions
+
+A GAM relaxes the *linearity* assumption specifically, but still
+relies on the other standard regression assumptions: independence of
+observations, homoscedasticity (constant variance), and, for valid
+inference, approximately normal residuals. It does not assume
+normality or linearity of the *predictors* themselves.
+
+### Quick illustrative example
+
+The chart below is a simple, constructed example (not this project's
+real data) showing exactly why this matters. Here, `y` depends
+strongly on `x`, but the relationship is a wave shape, not a line:
 
 
 # Part B: Diagnostic Testing
