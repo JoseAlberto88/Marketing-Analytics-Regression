@@ -1156,6 +1156,44 @@ real data) showing exactly why this matters. Here, `y` depends
 strongly on `x`, but the relationship is a wave shape, not a line:
 
 
+**Note:** the example below is a constructed, illustrative toy dataset
+built purely to demonstrate the concept. It is not derived from this
+project's marketing data. It exists only to show *why* a GAM can be
+necessary in principle, before applying it to our real predictors.
+
+```{r gam-toy-example, fig.width=8.5, fig.height=6}
+library(mgcv)
+
+set.seed(1)
+n <- 300
+x <- runif(n, 0, 10)
+y <- 5 + 3*sin(x) + rnorm(n, sd = 0.8)  # a genuine non-linear (wave-shaped) relationship
+toy_df <- data.frame(x = x, y = y)
+
+lm_toy <- lm(y ~ x, data = toy_df)
+gam_toy <- gam(y ~ s(x), data = toy_df)
+
+pred_grid <- data.frame(x = seq(0, 10, length.out = 200))
+pred_grid$lm_pred <- predict(lm_toy, pred_grid)
+pred_grid$gam_pred <- predict(gam_toy, pred_grid)
+
+ggplot(toy_df, aes(x = x, y = y)) +
+  geom_point(alpha = 0.35, size = 1.3, color = "#8FBFE0") +
+  geom_line(data = pred_grid, aes(x = x, y = lm_pred), color = "#D9534F", linewidth = 1.1, linetype = "dashed") +
+  geom_line(data = pred_grid, aes(x = x, y = gam_pred), color = "#4A9D5B", linewidth = 1.1) +
+  annotate("text", x = 0.3, y = 8.5, label = "Dashed red = linear fit (R\u00b2 = 0.01)",
+           hjust = 0, size = 3.8, color = "#D9534F", fontface = "bold") +
+  annotate("text", x = 0.3, y = 7.8, label = "Solid green = GAM fit (87% deviance explained)",
+           hjust = 0, size = 3.8, color = "#4A9D5B", fontface = "bold") +
+  theme_minimal() +
+  labs(title = "Why a Linear Model Can Completely Miss a Real Relationship",
+       subtitle = "Toy example: y depends strongly on x, but not in a straight-line way",
+       x = "x", y = "y")
+```
+
+
+
+
 # Part B: Diagnostic Testing
 
 *(To fill in together \u2014 linearity, normality, homoscedasticity,
