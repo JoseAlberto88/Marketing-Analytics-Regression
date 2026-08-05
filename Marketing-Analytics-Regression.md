@@ -1463,6 +1463,8 @@ doubled the explained variance. This strongly validates the Step 5a–5c
 predictor selection process, and sets a high bar (R^2 = 0.777, RMSE =
 \$10.13) for Model 3 to try to beat.
 
+**HELLO**
+
 # Part B: Diagnostic Testing
 
 *(To fill in together 014 linearity, normality, homoscedasticity,
