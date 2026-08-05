@@ -1859,3 +1859,62 @@ Model 2’s additional predictors were added. Model 2 is not only the
 best-performing and most rigorously tested model in this analysis, it is
 also fully assumption-compliant, supporting its use for inference as
 well as prediction.
+
+# Part C: Business Implications & Limitations
+
+## 1. Key Findings
+
+Model 2 (`Income + PromoUsed + PagesViewed + WebsiteVisits`) explains
+77.7% of the variance in purchase amount (RMSE = \$10.13, MAE = \$8.12).
+Standardized coefficients rank importance as **PromoUsed \> Income \>
+PagesViewed \> WebsiteVisits**. A promotion’s effect outweighs even
+income. Promo users spend 23% more (\$99.10 vs. \$80.40) with a
+*slightly lower* churn rate (24.2% vs. 24.6%), ruling out the “bargain
+hunter” concern. `TimeOnSite` and `SatisfactionScore`, despite looking
+promising early on, showed no real relationship with spending once
+tested directly.
+
+## 2. Marketing Implications
+
+1.  **Expand promotions with confidence**. No evidence they attract
+    low-loyalty customers.
+2.  **Target `PagesViewed`/`WebsiteVisits`, not raw session duration**.
+    Time-on-site doesn’t predict revenue; specific actions do.
+3.  **Don’t use satisfaction scores for revenue targeting**. They’re
+    decoupled from spending; keep them for service-quality purposes
+    only.
+4.  Regional efficiency differences are minor (~\$0.35–\$0.37 per
+    impression). Heavy regional customization isn’t justified by this
+    data.
+
+## 3. Limitations
+
+- **Data quality:** No missing values or duplicates; low outlier
+  prevalence (`Clicks` highest at 1.06%); flagged outliers retained as
+  likely genuine high-engagement customers.
+- **Assumptions:** All Part B diagnostics passed cleanly
+  (homoscedasticity, independence, normality, VIF, Cook’s Distance). No
+  meaningful violations.
+- **Model weakness:** We haven’t tested those models yet, and ~22% of
+  variance remains unexplained. Since 14+ alternative models all confirm
+  the same four predictors, the gap likely reflects missing variables.
+  The remaining variance will be examined using additional models or new
+  feature engineering.
+- **Interpretability:** Correlational, not causal, `PromoUsed`’s effect
+  could partly reflect self-selection rather than a pure promotional
+  lift.
+
+## 4. Future Improvements
+
+- **Missing variables:** Customer tenure, acquisition channel, purchase
+  history/RFM features, seasonality, competitor pricing.
+- **Alternatives tested:** GAM (edf = 1.000, confirms linearity). These
+  additional models have not yet been tested; however, they represent
+  logical next steps for addressing the remaining ~22% unexplained
+  variance. GAM can assess nonlinear effects, XGBoost can capture
+  higher‑order interactions, and Lasso/Ridge can verify predictor
+  stability. If these approaches fail to reduce the residual variance,
+  further feature‑engineering efforts may be necessary..
+- **Next steps:** A controlled A/B experiment on promotions to establish
+  causality, and segment-specific models to test whether these 4
+  predictors matter differently across customer groups.
