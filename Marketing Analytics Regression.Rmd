@@ -1028,7 +1028,10 @@ ggplot(coef_df, aes(x = reorder(term, estimate), y = estimate, fill = p.value < 
        subtitle = "Standardized so all predictors are on the same scale, for fair comparison",
        x = NULL, y = "Standardized Coefficient (Beta)")
 ```
+
+
 **Actual vs. Predicted**
+
 
 ```{r model2-actual-vs-predicted, fig.width=8.5, fig.height=6.5}
 pred_df2 <- data.frame(actual = actuals, predicted = predictions2)
@@ -1044,6 +1047,48 @@ ggplot(pred_df2, aes(x = actual, y = predicted)) +
        subtitle = "Dashed red line = perfect prediction (actual = predicted)",
        x = "Actual Purchase Amount ($)", y = "Predicted Purchase Amount ($)")
 ```
+
+
+## Step 5e: Insights: Model 2 (Multiple Regression)
+
+**Model 2 dramatically outperforms Model 1.** R^2 jumped from 0.340
+(Income alone) to **0.777**. Four predictors together explain
+**77.7%** of the variance in `PurchaseAmount`, compared to just 34%
+before. RMSE fell from $17.42 to **$10.13**, and MAE fell from $14.13
+to **$8.12**, on average, this model's predictions land within about
+$8 of the true purchase amount, a substantial accuracy gain.
+
+**All four predictors are significant and their 95% CIs exclude
+zero**, confirming genuine, non-random effects:
+- **Income:** +$5.03 per $10,000 increase (CI: $4.92–$5.14 per $10K)
+- **PromoUsed:** +$19.45 to +$20.57, the single largest lift of any
+  predictor
+- **PagesViewed:** +$1.43 to +$1.53 per additional page
+- **WebsiteVisits:** +$1.91 to +$2.09 per additional visit
+
+**Standardized coefficients reveal the true ranking of importance**
+(raw dollar coefficients can't be compared directly since they're on
+different scales). Once standardized, the order is:
+**PromoUsed > Income > PagesViewed > WebsiteVisits**. This is a
+genuinely interesting finding: `PromoUsed`, a simple binary flag,
+outweighs `Income` in standardized effect size, meaning a customer's
+*engagement with a promotion* moves the needle on spending more than
+their income bracket does. That's a strong, actionable marketing
+insight: promo strategy may be a more powerful lever than income-based
+targeting alone.
+
+**The actual-vs-predicted plot confirms this numerically strong fit
+visually**. Points hug the diagonal far more tightly than they did in
+Model 1's equivalent plot, with only modest scatter at the extremes
+(very low and very high actual purchase amounts), where the model
+slightly under- and over-predicts respectively.
+
+**Bottom line:** adding `PromoUsed`, `PagesViewed`, and `WebsiteVisits`
+to `Income` didn't just improve the model incrementally, it more than
+doubled the explained variance. This strongly validates the Step 5a–5c
+predictor selection process, and sets a high bar (R^2 = 0.777,
+RMSE = $10.13) for Model 3 to try to beat.
+
 
 # Part B: Diagnostic Testing
 
